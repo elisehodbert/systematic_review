@@ -1,6 +1,6 @@
 #### Importation and preprecrocessing ####
 
-grille_quality = read.xlsx("quality_assessment.xlsx")
+grille_quality = read.xlsx("quality_assessment_v0.xlsx")
 
 grille_quality <- grille_quality %>%
   mutate(across(6:18, ~ as.factor(substr(as.character(.), 1, 1)))) %>%
@@ -76,3 +76,31 @@ ggsave(conf, file="figures/confidence_assessment.png", dpi=600, width = 20, heig
 summary(as.factor(grille_quality$`5 - Data choice rationale`))
 summary(as.factor(grille_quality$`8 - Analytic method rationale`))
 summary(as.factor(grille_quality$`10 - Stakeholder input`))
+
+# évolution du score moyen
+score = grille_quality %>%
+  mutate(across(6:16, ~ as.numeric(substr(as.character(.), 1, 1)))) %>%
+  mutate(score_total = rowSums(across(6:16), na.rm = TRUE))
+
+evolution_score <- score %>%
+  group_by(year_publi) %>%
+  summarise(
+    mean_score = mean(score_total, na.rm = TRUE),
+    median_score = median(score_total, na.rm = TRUE),
+    n = n()
+  ) %>%
+  arrange(year_publi)
+
+evolution_score
+  
+# évolution du nombre de missing transfers
+evolution_na <- df_articles %>%
+  group_by(year_publi) %>%
+  summarise(
+    n_total = n(),
+    n_na = sum(is.na(nb_transfers)),
+    prop_na = mean(is.na(nb_transfers))
+  ) %>%
+  arrange(year_publi)
+
+evolution_na
