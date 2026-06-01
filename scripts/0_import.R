@@ -261,3 +261,4 @@ df_articles <- df_articles %>%
   ) 
 
 df_articles %>% count(max_delay_arrangé)
+
