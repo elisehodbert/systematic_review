@@ -1,12 +1,8 @@
-library(openxlsx)
-library(dplyr)
-library(tidyr)
-library(ggplot2)
 library(patchwork)
 
 #### Importation and preprocessing ####
 
-grille_quality <- read.xlsx("quality_assessment.xlsx")
+grille_quality <- read.xlsx("quality_assessment_v0.xlsx")
 
 grille_quality <- grille_quality %>%
   mutate(across(6:18, ~ as.factor(substr(as.character(.), 1, 1)))) %>%
@@ -91,10 +87,6 @@ make_plot <- function(data, period_name) {
     )
 }
 
-conf_periods <- (p1 + p2 + p3) +
-  plot_layout(nrow = 1, guides = "collect") +
-  plot_annotation(tag_levels = "A")
-
 p1 <- make_plot(df_count, "2010-2014")
 p2 <- make_plot(df_count, "2015-2019")
 p3 <- make_plot(df_count, "2020-2025")
@@ -149,3 +141,24 @@ summary_critere7 <- grille_quality %>%
   )
 
 summary_critere7
+
+#### Trend test for criterion 7 ####
+
+trend_critere7 <- grille_quality %>%
+  mutate(
+    period = case_when(
+      year_publi >= 2010 & year_publi <= 2014 ~ 1,
+      year_publi >= 2015 & year_publi <= 2019 ~ 2,
+      year_publi >= 2020 & year_publi <= 2025 ~ 3,
+      TRUE ~ NA_real_
+    ),
+    critere7 = as.numeric(as.character(`7 - Recruitement data`))
+  ) %>%
+  filter(!is.na(period), !is.na(critere7))
+
+model_trend_critere7 <- lm(critere7 ~ period, data = trend_critere7)
+
+summary(model_trend_critere7)
+confint(model_trend_critere7)
+
+summary(model_trend_critere7)$coefficients["period", ]
